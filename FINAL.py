@@ -8,8 +8,6 @@ detailed information for both.
 import pandas as pd
 import pydeck as pdk
 import streamlit as st
-import numpy as np
-import matplotlib
 import matplotlib.pyplot as plt
 districts = pd.read_csv("BostonPoliceDistricts.csv").set_index("District")
 
