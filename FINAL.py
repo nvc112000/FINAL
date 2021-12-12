@@ -9,6 +9,7 @@ import pandas as pd
 import pydeck as pdk
 import streamlit as st
 import matplotlib.pyplot as plt
+
 districts = pd.read_csv("BostonPoliceDistricts.csv").set_index("District")
 
 
@@ -22,7 +23,7 @@ def map_create2(df_filtered):
     lat = 42.29755533
     lon = -71.0589
     view_state = pdk.ViewState(latitude=lat, longitude=lon, zoom=10)
-    layer = pdk.Layer('ScatterplotLayer', data=df_filtered, get_position=['Long', 'Lat'], get_radius=200,
+    layer = pdk.Layer('ScatterplotLayer', data=df_filtered, get_position=['Long', 'Lat'], get_radius=150,
                       get_color=[100, 150, 200])
     tool_tip = {'html': 'Listing:<br><b>{name}</b>', 'style': {'backgroundColor': 'steelblue', 'color': 'white'}}
     map = pdk.Deck(map_style='mapbox://styles/mapbox/light-v9',
@@ -59,7 +60,6 @@ def bar_chart2(fd, color, district):
 
 
 def main():
-
     # District read in
     d_chart = pd.read_csv("BostonPoliceDistricts.csv").set_index("District")
     # FORMATTING
@@ -75,16 +75,17 @@ def main():
 
     # multiselect list of districts
     dricts = df['DISTRICT'].unique()
-    sel_districts = st.sidebar.multiselect('Districts (For Pie Chart)', dricts)
+    sel_districts = st.sidebar.multiselect('District Crime Comparison Pie Chart. Select Districts to Compare', dricts)
 
     # Drop down list of District
     st.sidebar.write("District chart", d_chart)
     district = df['DISTRICT'].unique()
-    sel_district = st.sidebar.selectbox('District (For Bar Chart)', district)
+    sel_district = st.sidebar.selectbox('Select District to View Number of Crimes by Day of Week', district)
 
     # MAP
     df_filtered = df[df['OFFENSE_DESCRIPTION'] == crime]
     st.subheader("Map based on selected crime")
+    st.write("Selected Crime: ", crime)
     df_filtered["Long"] = df_filtered["Long"]
     df_filtered["Lat"] = df_filtered["Lat"]
     map_data = df_filtered[["Long", "Lat"]]
@@ -99,6 +100,8 @@ def main():
     st.write("Total Number of Offenses:", c_count)
     d_count = df_filtered['DISTRICT'].mode()
     st.write(f"District(s) Crime Occurs Most in: {','.join(d_count)}")
+    st.write("Number of Specified Crime by District: ", crime)
+    st.write(df_filtered.groupby(['DISTRICT'])['OFFENSE_CODE'].count().reset_index(name="Number of Offenses").set_index('DISTRICT'))
 
     # piechart
     st.subheader("Pie Chart Comparing Crime Rate Based on District")
@@ -122,6 +125,9 @@ def main():
     st.write(f"Most Frequent Crime(s) In District: {''.join(most_crime)}")
     s_count = fda['STREET'].mode()
     st.write(f"Street With Most Crime: {''.join(s_count)}")
+    st.write("District Crime Counts By Offense: ", sel_district)
+    fda.rename(columns={'OFFENSE_CODE': 'Count'})
+    st.write(fda.groupby(['OFFENSE_DESCRIPTION'])['OFFENSE_CODE'].count().reset_index(name="Number of Offenses").set_index('OFFENSE_DESCRIPTION'))
 
 
 main()
